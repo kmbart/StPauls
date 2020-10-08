@@ -85,19 +85,20 @@ def ValidLine (lineList) -> bool:
     invalidLine  = False
 
     aLine = parsedLine()
+    aLine.lineText = lineList
 
     matchObj = reName.search(lineList[0])
-    if matchObj != None: aLine.Name = matchObj.group(0)
+    if matchObj != None: aLine.lineName = matchObj.group(0)
     else:                invalidLine  = True
 #    print('name re=', matchObj, ',name=', name)
 
     matchObj = reAmts.search(lineList[3])
-    if matchObj != None: aLine.PAmt = float(matchObj.group(0).replace(',',''))
+    if matchObj != None: aLine.linePAmt = float(matchObj.group(0).replace(',',''))
     else:                invalidLine  = True
 #    print('pamt re=', matchObj, ',pamt=', pamt)
 
     matchObj = reAmts.search(lineList[5])
-    if matchObj != None: aLine.GAmt = float(matchObj.group(0).replace(',',''))
+    if matchObj != None: aLine.lineGAmt = float(matchObj.group(0).replace(',',''))
     else:                invalidLine  = True
 #    print('gamt re=', matchObj, ',gamt=', gamt)
 
@@ -121,29 +122,30 @@ with open(r"C:\\Users\keith\OneDrive\Documents\St. Paul's\Pledging\Pledge-Giving
 
         currLine = ValidLine (line)
         if not currLine.lineValid: continue
+        print ('line=', currLine)
 
 #    If a valid line then add to counts and amounts
         if currLine.lineEGiver:
             cntEGivers  += 1
-            totEGiven   += currLine.GAmt
-            totEPledged += currLine.PAmt
+            totEGiven   += currLine.lineGAmt
+            totEPledged += currLine.linePAmt
 
-        if currLine.PAmt == 0:
+        if currLine.linePAmt == 0:
             cntUnpledged += 1
-            totUnpledged += currLine.GAmt
+            totUnpledged += currLine.lineGAmt
 
-        if currLine.PAmt == 0 and currLine.lineEGiver:
+        if currLine.linePAmt == 0 and currLine.lineEGiver:
             cntENotP        += 1
-            totENotPGiven   += currLine.GAmt
+            totENotPGiven   += currLine.lineGAmt
 
-        if currLine.PAmt != 0 and not currLine.lineEGiver:
+        if currLine.linePAmt != 0 and not currLine.lineEGiver:
             cntPNotE        += 1
-            totPNotEGiven   += currLine.GAmt
-            totPNotEPledged += currLine.PAmt
+            totPNotEGiven   += currLine.lineGAmt
+            totPNotEPledged += currLine.linePAmt
 
         cntAllGivers  += 1
-        totAllGiven   += currLine.GAmt
-        totAllPledged += currLine.PAmt
+        totAllGiven   += currLine.lineGAmt
+        totAllPledged += currLine.linePAmt
 
 
 #  Show the counts and amounts
