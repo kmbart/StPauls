@@ -35,6 +35,7 @@
 
 import csv
 import re
+from dataclasses import dataclass
 
 
 # reAmts = re.compile(r'("\d,|"\d\d,)?(\d|\d\d|\d\d\d)(.\d\d)(")?,')
@@ -66,38 +67,46 @@ totUnpledged    = 0
 # PGfile.close()
 # print('linelist=', lineList)
 
-def ValidLine (lineList):
+
+@dataclass
+class parsedLine:
+    lineText: str = ''
+    lineName: str = ''
+    lineGAmt: float = 0.0
+    linePAmt: float = 0.0
+    lineEGiver: bool = False
+    lineValid: bool = False
+
+
+def ValidLine (lineList) -> bool:
 # If aline has name and pledge amount and given amount
 
-    invalidLine = False
-#    print('lineList=', lineList)
+    print('lineList=', lineList)
+    invalidLine  = False
+
+    aLine = parsedLine()
 
     matchObj = reName.search(lineList[0])
-    if matchObj != None: name = matchObj.group(0)
+    if matchObj != None: aLine.Name = matchObj.group(0)
     else:                invalidLine  = True
 #    print('name re=', matchObj, ',name=', name)
 
     matchObj = reAmts.search(lineList[3])
-    if matchObj != None: pamt = float(matchObj.group(0).replace(',',''))
+    if matchObj != None: aLine.PAmt = float(matchObj.group(0).replace(',',''))
     else:                invalidLine  = True
 #    print('pamt re=', matchObj, ',pamt=', pamt)
 
     matchObj = reAmts.search(lineList[5])
-    if matchObj != None: gamt = float(matchObj.group(0).replace(',',''))
+    if matchObj != None: aLine.GAmt = float(matchObj.group(0).replace(',',''))
     else:                invalidLine  = True
 #    print('gamt re=', matchObj, ',gamt=', gamt)
 
-    if lineList[7] == 'X': egiver = True
-    else:                  egiver = False
+    if lineList[7] == 'X': aLine.lineEGiver = True
 #    print('egiver=', egiver)
 
-    if invalidLine:
-        name   = ''
-        pamt   = 0
-        gamt   = 0
-        egiver = False
+    aLine.lineValid = not invalidLine
 
-    return (name, pamt, gamt,egiver)
+    return (aLine)
 
 
 with open(r"C:\\Users\keith\OneDrive\Documents\St. Paul's\Pledging\Pledge-Giving Analysis- 20201002 + EFT.csv") as PGfile:
@@ -110,33 +119,31 @@ with open(r"C:\\Users\keith\OneDrive\Documents\St. Paul's\Pledging\Pledge-Giving
 #        if cntLines > 15: break
 #        print('read line:', cntLines, '=', line)
 
-        (donorName, amtPledged, amtGiven, eGiver) = ValidLine (line)
-        lineTuple = (donorName, amtPledged, amtGiven, eGiver)
-#        print('lineTuple= ', lineTuple)
-        if lineTuple == ('',0,0,False): continue
+        currLine = ValidLine (line)
+        if not currLine.lineValid: continue
 
 #    If a valid line then add to counts and amounts
-        if eGiver:
+        if currLine.lineEGiver:
             cntEGivers  += 1
-            totEGiven   += amtGiven
-            totEPledged += amtPledged
+            totEGiven   += currLine.GAmt
+            totEPledged += currLine.PAmt
 
-        if amtPledged == 0:
+        if currLine.PAmt == 0:
             cntUnpledged += 1
-            totUnpledged += amtGiven
+            totUnpledged += currLine.GAmt
 
-        if amtPledged == 0 and eGiver:
+        if currLine.PAmt == 0 and currLine.lineEGiver:
             cntENotP        += 1
-            totENotPGiven   += amtGiven
+            totENotPGiven   += currLine.GAmt
 
-        if amtPledged != 0 and not eGiver:
+        if currLine.PAmt != 0 and not currLine.lineEGiver:
             cntPNotE        += 1
-            totPNotEGiven   += amtGiven
-            totPNotEPledged += amtPledged
+            totPNotEGiven   += currLine.GAmt
+            totPNotEPledged += currLine.PAmt
 
         cntAllGivers  += 1
-        totAllGiven   += amtGiven
-        totAllPledged += amtPledged
+        totAllGiven   += currLine.GAmt
+        totAllPledged += currLine.PAmt
 
 
 #  Show the counts and amounts
